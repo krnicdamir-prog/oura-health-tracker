@@ -71,11 +71,36 @@ function appendCell(row, tag, value, className) {
   return cell;
 }
 
-function recent(snapshot, days, key) {
-  const start = new Date(snapshot.today + 'T00:00:00Z');
-  start.setUTCDate(start.getUTCDate() - days + 1);
-  const cutoff = dayKey(start);
-  return mean(snapshot.days.filter(row => row.day >= cutoff).map(row => row[key]));
+function recentValues(days, key, offset = 0) {
+  const end = new Date(model.today + 'T00:00:00Z');
+  end.setUTCDate(end.getUTCDate() - offset);
+  const lastDay = dayKey(end);
+  end.setUTCDate(end.getUTCDate() - days + 1);
+  const firstDay = dayKey(end);
+  return model.days.filter(row => row.day >= firstDay && row.day <= lastDay).map(row => row[key]);
+}
+
+function appendAverage(row, values, previousValues, key, type, className = '') {
+  const current = values.filter(Number.isFinite);
+  const previous = previousValues.filter(Number.isFinite);
+  const value = mean(current);
+  const cell = appendCell(row, 'td', format(value, type), className);
+  if (value === null) cell.classList.add('muted');
+  if (current.length < 3 || previous.length < 3) return;
+
+  const baseline = mean(previous);
+  const delta = type === 'temperature' ? Math.abs(baseline) - Math.abs(value)
+    : key === 'lowest_pulse' ? baseline - value : value - baseline;
+  const tolerance = type === 'temperature' ? 0.1 : Math.abs(baseline) * 0.05;
+  const status = delta > tolerance ? 'higher' : delta < -tolerance ? 'lower' : 'steady';
+  const labels = {higher:'Povoljniji trend', lower:'Nepovoljniji trend', steady:'Sličan prosjek'};
+  cell.classList.add('average-' + status);
+  cell.title = labels[status] + ' · prethodni prosjek ' + format(baseline, type);
+  cell.setAttribute('aria-label', cell.textContent + ' · ' + cell.title);
+}
+
+function appendRecentAverage(row, days, key, type, className) {
+  appendAverage(row, recentValues(days, key), recentValues(days, key, days), key, type, className);
 }
 
 function renderTable(periods) {
@@ -98,11 +123,21 @@ function renderTable(periods) {
       element('charts').scrollIntoView({behavior:'smooth', block:'nearest'});
     };
     appendCell(row, 'th', button, 'metric-name').scope = 'row';
-    for (const days of [7,14]) appendCell(row, 'td', format(recent(model,days,key),type), 'avg');
-    for (const period of periods) {
-      const value = mean(period.rows.map(item => item[key]));
-      appendCell(row, 'td', format(value,type), value === null ? 'muted' : '');
-    }
+    for (const days of [7,14]) appendRecentAverage(row, days, key, type, 'avg');
+    periods.forEach((period, periodIndex) => {
+      const values = period.rows.map(item => item[key]);
+      if (view === 'monthly') {
+        let previous = periods[periodIndex + 1]?.rows || [];
+        if (periodIndex === 0) {
+          const dayOfMonth = model.today.slice(8);
+          previous = previous.filter(item => item.day.slice(8) <= dayOfMonth);
+        }
+        appendAverage(row, values, previous.map(item => item[key]), key, type);
+      } else {
+        const value = mean(values);
+        appendCell(row, 'td', format(value,type), value === null ? 'muted' : '');
+      }
+    });
   });
 }
 
@@ -179,8 +214,8 @@ function renderRecovery() {
   for (const days of [7,30,90]) {
     const row = body.insertRow();
     appendCell(row,'th',days + ' d').scope = 'row';
-    appendCell(row,'td',format(recent(model,days,'hrv'),'number'));
-    appendCell(row,'td',format(recent(model,days,'lowest_pulse'),'number'));
+    appendRecentAverage(row, days, 'hrv', 'number');
+    appendRecentAverage(row, days, 'lowest_pulse', 'number');
   }
 }
 
