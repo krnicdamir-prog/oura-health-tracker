@@ -9,4 +9,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "oura-health-db"
-database_id = "0e29a8d5-3ae7-4a4e-b407-e8e05f09ed93"
+database_id = "0e29a8d5-3ae7-4a4e-b407-e8c05f09ed93"
