@@ -6,7 +6,7 @@ preview_urls = false
 
 [vars]
 APP_ORIGIN = "https://oura-health-tracker.krnic-damir.workers.dev"
-OURA_LIVE = "false"
+OURA_LIVE = "true"
 
 [triggers]
 crons = ["*/15 * * * *"]
