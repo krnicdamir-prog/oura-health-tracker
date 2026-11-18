@@ -2,11 +2,11 @@
 
 Oura Health Tracker is a private application for personal health monitoring and analysis.
 
-The application is intended for use by its owner.
+The application is intended for use by its owner and invited users.
 
 It retrieves authorized health and activity information through the Oura API.
 
-The information and AI-generated analyses are provided for personal informational purposes only.
+The information is provided for personal informational purposes only.
 
 The application does not provide medical diagnoses or replace professional medical advice.
 

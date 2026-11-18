@@ -5,6 +5,8 @@
   const button = form.querySelector('button[type="submit"]');
   const result = document.querySelector('#result');
   const mode = form.dataset.mode;
+  const inviteToken = mode === 'invite' ? location.hash.slice(1) : '';
+  if (mode === 'invite') history.replaceState(null, '', '/invite');
   const encoder = new TextEncoder();
   function hex(buffer) { return Array.from(new Uint8Array(buffer), b => b.toString(16).padStart(2,'0')).join(''); }
   function fromHex(x) { return Uint8Array.from(x.match(/.{2}/g), a => parseInt(a,16)); }
@@ -22,16 +24,20 @@
   form.addEventListener('submit',async event => {
     event.preventDefault();button.disabled=true;
     result.textContent='Provjeravam podatke...';
-    const username=document.querySelector('#username').value.trim().toLowerCase();
+    const username=document.querySelector('#username')?.value.trim().toLowerCase();
     const password=document.querySelector('#password').value;
     try {
-      if (!/^[a-z0-9_.-]{3,40}$/.test(username)) throw new Error('Korisničko ime: 3–40 znakova, slova, brojevi, točka, crtica ili _.');
-      if (mode==='setup') {
+      if (mode !== 'invite' && !/^[a-z0-9_.-]{3,40}$/.test(username)) throw new Error('Korisničko ime: 3–40 znakova, slova, brojevi, točka, crtica ili _.');
+      if (mode !== 'login') {
         if(password.length<14) throw new Error('Lozinka mora imati najmanje 14 znakova.');
         const salt=hex(crypto.getRandomValues(new Uint8Array(16)));
         const derived=await derive(password,salt);
-        const setupKey=document.querySelector('#setupKey').value;
-        await post('/setup',{setupKey,username,salt,derived});
+        if (mode === 'invite') {
+          await post('/invite',{token:inviteToken,salt,derived});
+        } else {
+          const setupKey=document.querySelector('#setupKey').value;
+          await post('/setup',{setupKey,username,salt,derived});
+        }
         result.textContent='Račun je stvoren. Sada se prijavi.';
         location.assign('/login');
       } else {

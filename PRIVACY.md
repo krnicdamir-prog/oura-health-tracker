@@ -1,17 +1,9 @@
 # Privacy Policy
 
-Oura Health Tracker is a private application intended for personal health monitoring.
+Oura Health Tracker is a private application for the owner and invited users. Each app account is separate and each user authorizes their own Oura account.
 
-The application accesses Oura Ring data only with the account owner's authorization.
+The application reads daily activity, readiness, and sleep data after the user grants Oura access. It stores daily scores, sleep durations, average HRV, lowest overnight heart rate, temperature deviation, and steps in a private Cloudflare D1 database. Monthly averages and trends are calculated from these daily measurements. The application does not collect health-related email, profile information, or detailed heart rate samples from Oura.
 
-The purpose of processing this information is to analyze sleep, heart rate, heart rate variability (HRV), physical activity, and recovery trends.
+Cloudflare runs the application and hosts the database. The application does not publish health measurements or send them to AI services. Each account can view only its own measurements. The application encrypts Oura access and refresh tokens before writing them to the database.
 
-Health data is not publicly shared or sold.
-
-Authorized third-party AI services may process health data when explicitly enabled by the account owner.
-
-Access credentials and health data must be stored securely and must not be published in this repository.
-
-The account owner may revoke Oura API access at any time.
-
-This policy will be updated to reflect the application's actual data storage, processing, and deletion procedures before the integration becomes operational.
+Users can revoke future access in their Oura account settings. This does not delete measurements previously imported into the application. Users can ask the application owner to remove their account, Oura connection and stored measurements.
