@@ -237,7 +237,7 @@ export default {
       if (path.startsWith('/api/')) {
         if (!user) return responseJson({error:'Nisi prijavljen.'},401);
         if (path === '/api/me') return method === 'GET' ? responseJson({username:user.username,role:user.role}) : wrongMethod();
-        if (path === '/api/health') return method === 'GET' ? responseJson(await healthSnapshot(env,user.id)) : wrongMethod();
+        if (path === '/api/health') return method === 'GET' ? responseJson(await healthSnapshot(env,user)) : wrongMethod();
         if (path === '/api/health/sync') {
           if (method !== 'POST') return wrongMethod();
           if (!ouraEnabled(env)) return unavailable();

@@ -22,9 +22,17 @@ const sha256 = async value => base64url(new Uint8Array(await crypto.subtle.diges
 const tokenFormat = /^[A-Za-z0-9_-]{43}$/;
 const dayFormat = /^\d{4}-\d{2}-\d{2}$/;
 
+export function ouraSetupIssues(env) {
+  const issues = [];
+  if (env.OURA_LIVE !== 'true') issues.push('OURA_LIVE');
+  for (const name of ['OURA_CLIENT_ID', 'OURA_CLIENT_SECRET', 'AUTH_MASTER_KEY', 'APP_ORIGIN']) {
+    if (typeof env[name] !== 'string' || !env[name].trim()) issues.push(name);
+  }
+  return issues;
+}
+
 export function ouraEnabled(env) {
-  return env.OURA_LIVE === 'true' && !!env.OURA_CLIENT_ID && !!env.OURA_CLIENT_SECRET
-    && !!env.AUTH_MASTER_KEY && !!env.APP_ORIGIN;
+  return ouraSetupIssues(env).length === 0;
 }
 
 async function tokenCipher(env) {
@@ -314,15 +322,18 @@ export async function scheduledSync(env) {
   for (const {user_id} of results) await syncOura(env, user_id);
 }
 
-export async function healthSnapshot(env, userId) {
+export async function healthSnapshot(env, user) {
   const today = localDay();
   const snapshot = {today, enabled: ouraEnabled(env), connection: null, days: []};
-  if (!snapshot.enabled) return snapshot;
+  if (!snapshot.enabled) {
+    if (user.role === 'admin') snapshot.setupIssues = ouraSetupIssues(env);
+    return snapshot;
+  }
   const start = firstHistoryDay(today);
   const [status, data] = await env.DB.batch([
-    env.DB.prepare('SELECT sync_state AS state, last_synced_at AS lastSynced, history_cursor IS NOT NULL AS importing FROM oura_connections WHERE user_id=?').bind(userId),
+    env.DB.prepare('SELECT sync_state AS state, last_synced_at AS lastSynced, history_cursor IS NOT NULL AS importing FROM oura_connections WHERE user_id=?').bind(user.id),
     env.DB.prepare(`SELECT day,${columns.join(',')} FROM oura_daily WHERE user_id=? AND day BETWEEN ? AND ? ORDER BY day DESC`)
-      .bind(userId, start, today)
+      .bind(user.id, start, today)
   ]);
   snapshot.connection = status.results[0] || null;
   snapshot.days = data.results;

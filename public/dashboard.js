@@ -186,13 +186,16 @@ function renderRecovery() {
 
 function render() {
   if (!model) return;
-  const {enabled,connection,days} = model;
+  const {enabled,connection,days,setupIssues} = model;
   const linked = !!connection && connection.state !== 'reconnect';
   element('connect').hidden = !enabled || linked;
   element('refresh').hidden = !linked;
   element('connection').classList.toggle('live',linked);
   element('connection').textContent = linked ? 'Oura povezana' : 'Oura nije povezana';
-  const message = !enabled ? 'Oura povezivanje čeka aktivaciju.'
+  const setupMessage = setupIssues?.length
+    ? 'U Cloudflareu provjeri postavke ' + setupIssues.join(', ') + '.'
+    : 'Oura povezivanje čeka aktivaciju.';
+  const message = !enabled ? setupMessage
     : !connection ? 'Poveži svoj Oura račun za uvoz podataka.'
     : !linked ? 'Ponovno poveži Oura račun kako bi se sinkronizacija nastavila.'
     : connection.state === 'retry' ? 'Sinkronizacija će se automatski ponovno pokušati.'
