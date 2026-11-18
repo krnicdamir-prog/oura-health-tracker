@@ -1,5 +1,12 @@
 name = "oura-health-tracker"
+main = "src/index.js"
 compatibility_date = "2026-11-18"
 
 [assets]
 directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "oura-health-db"
+database_id = "0e29a8d5-3ae7-4a4e-b407-e8e05f09ed93"
